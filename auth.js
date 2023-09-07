@@ -3,22 +3,25 @@ const jwt = require("jsonwebtoken");
 const secret_key = "abc@1234";
 
 // Middleware to verify token
-function verifyToken(req, res, next) {
-  const bearerHeader = req.headers["authorization"];
-  if (typeof bearerHeader !== "undefined") {
-    const bearerToken = bearerHeader.split(" ")[1];
-    req.token = bearerToken;
-    jwt.verify(req.token, secret_key, (error, authData) => {
-      if (error) {
-        res.send({ result: "Invalid Token" });
-      } else {
-        next();
+const verifyToken = (req, res, next) => {
+  const authHeader = req.headers.authorization;
+  if (authHeader) {
+    const token = authHeader.split(" ")[1];
+    jwt.verify(token, secret_key, (err, decoded) => {
+      if (err) {
+        if (err.name === "TokenExpiredError") {
+          return res.status(401).json({ error: "Token has expired" });
+        } else {
+          return res.status(403).json({ error: "Token is not valid" });
+        }
       }
+      req.user = decoded.user; // Assuming your user information is stored in the 'user' field
+      next();
     });
   } else {
-    res.sendStatus(403);
+    res.status(401).json({ error: "Authorization header missing" });
   }
-}
+};
 
 module.exports = {
   verifyToken,
