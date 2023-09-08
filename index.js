@@ -26,6 +26,7 @@ const productSchema = new mongoose.Schema({
 const Product = mongoose.model("Product", productSchema);
 
 // login api to generate token.
+// req.body: username and password.
 app.post("/login", (req, res) => {
   const { username, password } = req.body;
   console.log(username, password);
@@ -35,7 +36,7 @@ app.post("/login", (req, res) => {
       username: "Mark",
       email: "abc@gmail.com",
     };
-    jwt.sign({ user }, secret_key, { expiresIn: "7d" }, (error, token) => {
+    jwt.sign({ user }, secret_key, { expiresIn: "500s" }, (error, token) => {
       res.json({ token });
     });
   } else {
@@ -47,28 +48,45 @@ app.post("/login", (req, res) => {
 app.get("/read", verifyToken, async (req, res) => {
   try {
     const products = await Product.find();
-    res.json(products);
+    res.status(200).json(products);
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Internal server error" });
   }
 });
 
-app.post("/create", verifyToken, (req, res) => {
-  // perform POST operation.
-  res.json({
-    message: "Post operation successful",
-  });
+app.post("/create", verifyToken, async (req, res) => {
+  const data = new Product(req.body);
+  try {
+    const result = await data.save();
+    res.status(201).json({
+      message: "Post operation successful",
+      data: result,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Internal server error" });
+  }
 });
 
-app.put("/update/:id", verifyToken, (req, res) => {
+// req.params: _id (object id from mongodb) to update.
+app.put("/update/:_id", verifyToken, async (req, res) => {
   // perform PUT operation.
+  const data = await Product.updateOne(
+    {
+      _id: req.params,
+    },
+    { $set: { price: 350 } } // update new price.
+  );
+  res.send(data);
   res.json({ message: "Put operation successful" });
 });
 
-app.delete("/delete/:id", verifyToken, (req, res) => {
-  // perform DELETE operation.
-  res.json({ message: "Delete operation successful" });
+// req.params: _id (object id from mongodb) to delete.
+app.delete("/delete/:_id", verifyToken, async (req, res) => {
+  const data = await Product.deleteOne(req.params);
+  res.send(data);
+  // res.json({ message: "Delete operation successful" });
 });
 
 // listening on port 5000.
