@@ -1,15 +1,15 @@
+// importing modules.
 const express = require("express");
 const app = express();
 const jwt = require("jsonwebtoken");
 const { verifyToken, secret_key } = require("./auth");
 const { mongoose } = require("./database");
-const swaggerUi = require("swagger-ui-express");
-const swaggerJsdoc = require("swagger-jsdoc");
 
+// middleware to handle JSON and URL-encoded data.
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Define a Mongoose schema for products.
+// define a Mongoose schema for products.
 const productSchema = new mongoose.Schema({
   name: {
     type: String,
@@ -22,7 +22,7 @@ const productSchema = new mongoose.Schema({
   description: String,
 });
 
-// Create a Mongoose model for products.
+// create a Mongoose model for products.
 const Product = mongoose.model("Product", productSchema);
 
 // login api to generate token.
@@ -43,7 +43,7 @@ app.post("/login", (req, res) => {
   }
 });
 
-// CRUD APIs with token verification
+// CRUD APIs with token verification.
 app.get("/read", verifyToken, async (req, res) => {
   try {
     const products = await Product.find();
@@ -55,27 +55,19 @@ app.get("/read", verifyToken, async (req, res) => {
 });
 
 app.post("/create", verifyToken, (req, res) => {
-  const { name, price, description } = req.body;
-  console.log(name, price, description);
-  const product = new Product({ name, price, description });
-  product
-    .save()
-    .then(() => {
-      res.status(201).json({ message: "Product created successfully" });
-    })
-    .catch((error) => {
-      console.error("Error creating product", error);
-      res.status(400).json({ message: "Bad request" });
-    });
+  // perform POST operation.
+  res.json({
+    message: "Post operation successful",
+  });
 });
 
 app.put("/update/:id", verifyToken, (req, res) => {
-  // Perform put operation
+  // perform PUT operation.
   res.json({ message: "Put operation successful" });
 });
 
 app.delete("/delete/:id", verifyToken, (req, res) => {
-  // Perform delete operation
+  // perform DELETE operation.
   res.json({ message: "Delete operation successful" });
 });
 
